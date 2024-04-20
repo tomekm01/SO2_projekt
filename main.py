@@ -56,7 +56,6 @@ class Board:
             diff = 0
         for i in self.player1:
             i[1] +=diff
-            i[2] = diff
     
 def controller(window, board):
     while not board.game_over:
@@ -65,11 +64,8 @@ def controller(window, board):
             board.controller(1)
         elif char == curses.KEY_RIGHT:
             board.controller(2)
-        elif char == curses.KEY_ENTER:
-            board.game_over = True
-        elif char == -1:
+        else:
             board.controller(0)
-        curses.flushinp()
 
             
 
