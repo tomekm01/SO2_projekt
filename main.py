@@ -22,10 +22,15 @@ class Board:
                         [ROWS-2,(int(COLUMNS/2)+1),"\\"]]
         self.direction = 0
         self.enemies = []
+        self.x_offset = 0
+        self.y_offset = 0
+        self.char_l = ["/","(","^","<","!","/","<"]
+        self.char_r = ["\\",")","^",">","!","\\",">"]
+        self.lock_enemy_move = threading.Lock()
         for i in range(6):
-            self.enemy = [[i,0,"("],
-                      [i,1,"@"],
-                      [i,2,")"]]
+            self.enemy = [[i,1,self.char_l[i]],
+                      [i,2,"@"],
+                      [i,3,self.char_r[i]]]
             for j in range(11):
                 self.enemies.append(copy.deepcopy(self.enemy))
                 for k in self.enemy:
@@ -58,6 +63,10 @@ class Board:
     def controller(self,new_direction):
         # 1  2
         self.direction = new_direction
+
+    def controller_enemy(self,x,y):
+        self.x_offset = x
+        self.y_offset = y
         
     def move_p1(self):
         diff = 0
@@ -70,10 +79,13 @@ class Board:
         for i in self.player1:
             i[1] +=diff
 
-    def move_enemy(self,chosen,x,y):
-        for j in self.enemies[chosen]:
-            j[0]=x
-            j[1]=y
+    def move_enemy(self):
+        for enemy in self.enemies:
+            i = 0
+            for j in enemy:
+                j[0]+=(self.x_offset)
+                j[1]+=(self.y_offset)
+                i+=1
 
     
 def controller(window, board):
@@ -86,12 +98,26 @@ def controller(window, board):
         else:
             board.controller(0)
 
-def control_enemy(board, enemy):
+def controller_enemy(board, enemy):
+    x_off = 0
+    y_off = 0
+    i = 0
     while not board.game_over:
-        x_offset = 1 if enemy[0][1] < COLUMNS - 3 else -1  # Move right until near the edge, then left
-        y_offset = 0 if enemy[0][1] < COLUMNS - 3 else 1  # Move downwards if near the edge
-        print(f"Enemy {enemy} - x_offset: {x_offset}, y_offset: {y_offset}")
-        board.move_enemy(enemy, x_offset, y_offset)
+        row_pos = enemy[0][0]
+        if row_pos == 20:
+            board.game_over = True
+        if i == 0:
+            x_off = 1
+            y_off = 1
+        elif i == 16:
+            y_off = 1
+            x_off = -1
+        board.controller_enemy(y_off, x_off)
+        if x_off == 1:
+            i+=1
+        elif x_off == -1:
+            i-=1
+        y_off = 0
         time.sleep(0.1)
 
             
@@ -105,10 +131,10 @@ def start(window):
     control_enemies = []
     control_p1 = threading.Thread(target=controller, args=(window, board))
     control_p1.start()
-    for i, enemy in enumerate(board.enemies):
-        thread = threading.Thread(target=control_enemy, args=(board, enemy))  # Pass individual enemy
-        control_enemies.append(thread)
-        thread.start()
+    for i in board.enemies:
+        control_enemy = threading.Thread(target=controller_enemy,args=(board, i))
+        control_enemies.append(control_enemy)
+        control_enemy.start()
 
     curses.curs_set(0)
     while not board.game_over:
@@ -118,10 +144,11 @@ def start(window):
         time.sleep(0.1)
 
         board.move_p1()
+        board.move_enemy()
         board.refresh()
 
     control_p1.join()
-    for thread in control_enemy:
+    for thread in control_enemies:
         thread.join()
 
 if __name__ == "__main__":
