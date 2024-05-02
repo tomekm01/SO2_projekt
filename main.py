@@ -20,9 +20,12 @@ class Board:
                         [ROWS-2,(int(COLUMNS/2)-1),"/"],
                         [ROWS-2,(int(COLUMNS/2)),"*"],
                         [ROWS-2,(int(COLUMNS/2)+1),"\\"]]
+        
+
         self.direction = 0
         self.enemies = []
         self.x_offset = 0
+        self.shot_matrix = [[" " for _ in range(COLUMNS)] for _ in range(ROWS)]
         self.y_offset = 0
         self.char_l = ["/","(","^","<","!","/","<"]
         self.char_r = ["\\",")","^",">","!","\\",">"]
@@ -35,8 +38,6 @@ class Board:
                 self.enemies.append(copy.deepcopy(self.enemy))
                 for k in self.enemy:
                     k[1] +=3
-            self.enemy_shots = my_list = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            self.player1_shot = [0,0]
 
         self.game_over = False
 
@@ -59,6 +60,11 @@ class Board:
         for i in self.enemies:
             for r,c,ch in i:
                 self.field[r][c] = str(ch)
+        for i in range(len(self.shot_matrix)):
+            for j in range(len(self.shot_matrix[i])):
+                if(self.shot_matrix[i][j] != " "):
+                    self.field[i][j] = str(self.shot_matrix[i][j])
+        
 
     def controller(self,new_direction):
         # 1  2
@@ -87,6 +93,13 @@ class Board:
                 j[1]+=(self.y_offset)
                 i+=1
 
+    def shoot_p1(self):
+        x_pos = self.player1[3][2]
+        if self.shot_matrix[x_pos][ROWS-3] == "!":
+            self.shot_matrix[x_pos][ROWS-3] = " "
+        else:
+            self.shot_matrix[x_pos][ROWS-3] = "|"
+
     
 def controller(window, board):
     while not board.game_over:
@@ -95,6 +108,8 @@ def controller(window, board):
             board.controller(1)
         elif char == curses.KEY_RIGHT:
             board.controller(2)
+        elif char == curses.KEY_UP:
+            board.shoot_p1()
         else:
             board.controller(0)
 
