@@ -29,7 +29,7 @@ class Board:
         self.y_offset = 0
         self.char_l = ["/","(","^","<","!","/","<"]
         self.char_r = ["\\",")","^",">","!","\\",">"]
-        self.lock_enemy_move = threading.Lock()
+        self.lock_bullets_move = threading.Lock()
         for i in range(6):
             self.enemy = [[i,1,self.char_l[i]],
                       [i,2,"@"],
@@ -62,7 +62,7 @@ class Board:
                 self.field[r][c] = str(ch)
         for i in range(len(self.shot_matrix)):
             for j in range(len(self.shot_matrix[i])):
-                if(self.shot_matrix[i][j] != " "):
+                if not self.shot_matrix[i][j] == " " :
                     self.field[i][j] = str(self.shot_matrix[i][j])
         
 
@@ -94,24 +94,23 @@ class Board:
                 i+=1
 
     def shoot_p1(self):
-        x_pos = self.player1[3][2]
-        if self.shot_matrix[x_pos][ROWS-3] == "!":
-            self.shot_matrix[x_pos][ROWS-3] = " "
-        else:
-            self.shot_matrix[x_pos][ROWS-3] = "|"
+        x_pos = self.player1[2][1]
+        self.shot_matrix[ROWS-3][x_pos] = "|"
 
     
 def controller(window, board):
+    prev_char = 0
     while not board.game_over:
         char = window.getch()
         if char == curses.KEY_LEFT:
             board.controller(1)
         elif char == curses.KEY_RIGHT:
             board.controller(2)
-        elif char == curses.KEY_UP:
+        elif char == curses.KEY_UP and prev_char != curses.KEY_UP:
             board.shoot_p1()
         else:
             board.controller(0)
+        prev_char = char
 
 def controller_enemy(board, enemy):
     x_off = 0
@@ -135,7 +134,15 @@ def controller_enemy(board, enemy):
         y_off = 0
         time.sleep(0.1)
 
-            
+def controller_bullets(board):
+    while not board.game_over:
+        for i in range(len(board.shot_matrix)):
+            for j in range(len(board.shot_matrix[i])):
+                if board.shot_matrix[i][j] == "|":
+                    board.shot_matrix[i][j] = " "
+                    if i-1 >= 0:
+                        board.shot_matrix[i-1][j] = "|"
+        time.sleep(0.1)
         
 
             
@@ -150,6 +157,8 @@ def start(window):
         control_enemy = threading.Thread(target=controller_enemy,args=(board, i))
         control_enemies.append(control_enemy)
         control_enemy.start()
+    control_bullets = threading.Thread(target=controller_bullets, args=(board, ))
+    control_bullets.start()
 
     curses.curs_set(0)
     while not board.game_over:
@@ -165,6 +174,7 @@ def start(window):
     control_p1.join()
     for thread in control_enemies:
         thread.join()
+    control_bullets.join()
 
 if __name__ == "__main__":
     curses.wrapper(start)
