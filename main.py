@@ -11,6 +11,7 @@ class Board:
         self.lives = 3
         self.score = 0
         self.field = [[" " for _ in range(COLUMNS)] for _ in range(ROWS)]
+        self.shot_hitbox = [[" " for _ in range(COLUMNS)] for _ in range(ROWS)]
 
         self.player1 = [[ROWS-1,(int(COLUMNS/2)-2),"<"],
                         [ROWS-1,(int(COLUMNS/2)-1),"|"],
@@ -55,10 +56,12 @@ class Board:
     
     def refresh(self):
         self.field =[[" " for _ in range(COLUMNS)] for _ in range(ROWS)]
+        self.shot_hitbox = [[" " for _ in range(COLUMNS)] for _ in range(ROWS)]
         for r,c,ch in self.player1:
             self.field[r][c] = str(ch)
-        for i in self.enemies:
-            for r,c,ch in i:
+        for i in range(len(self.enemies)):
+            for r,c,ch in self.enemies[i]:
+                self.shot_hitbox[r][c] = i
                 self.field[r][c] = str(ch)
         for i in range(len(self.shot_matrix)):
             for j in range(len(self.shot_matrix[i])):
@@ -97,6 +100,11 @@ class Board:
         x_pos = self.player1[2][1]
         self.shot_matrix[ROWS-3][x_pos] = "|"
 
+    def shot_enemy(self, x, y):
+        with self.lock_bullets_move:
+            self.enemies.pop(self.shot_hitbox[x][y])
+            self.score+=1
+
     
 def controller(window, board):
     prev_char = 0
@@ -114,24 +122,29 @@ def controller(window, board):
 
 def controller_enemy(board, enemy):
     x_off = 0
+    par = 1
     y_off = 0
     i = 0
     while not board.game_over:
-        row_pos = enemy[0][0]
-        if row_pos == 20:
-            board.game_over = True
-        if i == 0:
-            x_off = 1
-            y_off = 1
-        elif i == 16:
-            y_off = 1
-            x_off = -1
-        board.controller_enemy(y_off, x_off)
-        if x_off == 1:
-            i+=1
-        elif x_off == -1:
-            i-=1
-        y_off = 0
+        if par % 3 == 0:
+            row_pos = enemy[0][0]
+            if row_pos == 20:
+                board.game_over = True
+            if i == 0:
+                x_off = 1
+                y_off = 1
+            elif i == 16:
+                y_off = 1
+                x_off = -1
+            board.controller_enemy(y_off, x_off)
+            if x_off == 1:
+                i+=1
+            elif x_off == -1:
+                i-=1
+            y_off = 0
+        else:
+            board.controller_enemy(0,0)
+        par+=1
         time.sleep(0.1)
 
 def controller_bullets(board):
@@ -142,6 +155,10 @@ def controller_bullets(board):
                     board.shot_matrix[i][j] = " "
                     if i-1 >= 0:
                         board.shot_matrix[i-1][j] = "|"
+                        if not board.field[i-1][j] == " ":
+                            board.shot_enemy(i-1,j)
+                            board.shot_matrix[i-1][j] = " "
+
         time.sleep(0.1)
         
 
