@@ -2,6 +2,7 @@ import curses
 import threading
 import time
 import copy
+import random
 
 ROWS, COLUMNS = 25, 50
 
@@ -100,6 +101,14 @@ class Board:
         x_pos = self.player1[2][1]
         self.shot_matrix[ROWS-3][x_pos] = "|"
 
+    def spawn_enemy_bullet(self):
+        threshhold = 0.5
+        for i in range(ROWS-1,0,-1):
+            for j in range(len(self.field[i])):
+                random_chance = random.random()
+                if self.field[i][j] == "@" and self.field[i][j+1] == " " and random_chance <= threshhold:
+                    self.shot_matrix[i][j+1] = "!"
+
     def shot_enemy(self, x, y):
         with self.lock_bullets_move:
             self.enemies.pop(self.shot_hitbox[x][y])
@@ -160,7 +169,9 @@ def controller_bullets(board):
                             board.shot_matrix[i-1][j] = " "
 
         time.sleep(0.1)
-        
+def spawn_enemy_shot(board):
+    while not board.game_over:
+        board.spawn_enemy_bullet()
 
             
 
@@ -176,6 +187,8 @@ def start(window):
         control_enemy.start()
     control_bullets = threading.Thread(target=controller_bullets, args=(board, ))
     control_bullets.start()
+    control_enemy_bullets = threading.Thread(target=spawn_enemy_shot, args=(board, ))
+    control_enemy_bullets.start()
 
     curses.curs_set(0)
     while not board.game_over:
