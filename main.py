@@ -2,6 +2,7 @@ import curses
 import threading
 import time
 import copy
+import time
 import random
 
 ROWS, COLUMNS = 25, 50
@@ -11,6 +12,7 @@ class Board:
     def __init__(self):
         self.lives = 3
         self.score = 0
+        self.elapsed_time = 0
         self.col_taken = [ False for _ in range(COLUMNS)]
         self.field = [[" " for _ in range(COLUMNS)] for _ in range(ROWS)]
         self.shot_hitbox = [[" " for _ in range(COLUMNS)] for _ in range(ROWS)]
@@ -23,8 +25,7 @@ class Board:
                         [ROWS-2,(int(COLUMNS/2)-1),"/"],
                         [ROWS-2,(int(COLUMNS/2)),"*"],
                         [ROWS-2,(int(COLUMNS/2)+1),"\\"]]
-        
-
+    
         self.direction = 0
         self.enemies = []
         self.x_offset = 0
@@ -56,7 +57,9 @@ class Board:
             for slot in row:
                 area += slot
             area += "|\n"
-        area +="|" + hp + "=" * (COLUMNS-14) + score + "|"
+        minutes = int(self.elapsed_time // 60)
+        seconds = int(self.elapsed_time % 60)
+        area +="|" + hp + "=" + "{:02d}:{:02d}".format(minutes, seconds) + "=" * (COLUMNS-20) + score + "|"
         return area
     
     def refresh(self):
@@ -75,27 +78,23 @@ class Board:
         
 
     def controller(self,new_direction):
-        with self.condition_move:
-            # 1  2
-            self.direction = new_direction
-            self.condition_move.wait()
+        # 1  2
+        self.direction = new_direction
 
     def controller_enemy(self,x,y):
         self.x_offset = x
         self.y_offset = y
         
     def move_p1(self):
-        with self.condition_move:
+        diff = 0
+        if self.direction == 1 and self.player1[0][1] > 0:
+            diff = -1
+        elif self.direction == 2 and self.player1[4][1] < COLUMNS-2:
+            diff = 1
+        else:
             diff = 0
-            if self.direction == 1 and self.player1[0][1] > 0:
-                diff = -1
-            elif self.direction == 2 and self.player1[4][1] < COLUMNS-2:
-                diff = 1
-            else:
-                diff = 0
-            for i in self.player1:
-                i[1] +=diff
-            self.condition_move.notify()
+        for i in self.player1:
+            i[1] +=diff
 
     def move_enemy(self):
         for enemy in self.enemies:
@@ -210,7 +209,10 @@ def spawn_enemy_shot(board):
         board.spawn_enemy_bullet()
         time.sleep(0.1)
 
-            
+def timer(board):
+    while not board.game_over:
+        board.elapsed_time+=1
+        time.sleep(1.0)
 
     
 def start(window):
@@ -224,6 +226,8 @@ def start(window):
         control_enemy.start()
     control_player_bullets = threading.Thread(target=controller_player_bullets, args=(board, ))
     control_player_bullets.start()
+    control_time = threading.Thread(target=timer, args=(board, ))
+    control_time.start()
     #control_enemy_bullets = threading.Thread(target=controller_enemy_bullets, args=(board, ))
     #control_enemy_bullets.start()
     #control_spawn_enemy_bullets = threading.Thread(target=spawn_enemy_shot, args=(board, ))
@@ -244,6 +248,7 @@ def start(window):
     for thread in control_enemies:
         thread.join()
     control_player_bullets.join()
+    control_time.join()
     #control_enemy_bullets.join()
     #control_spawn_enemy_bullets.join()
 
