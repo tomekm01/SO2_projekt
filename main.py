@@ -111,9 +111,11 @@ class Board:
     def spawn_enemy_bullet(self):
         treshold = 0.9
         for enemy in self.enemies:
-            if self.field[enemy[1][0]+1][enemy[1][1]] == " " and treshold <= random.random() and not self.col_taken[enemy[1][0]]:
-                self.shot_matrix[enemy[1][0]+1][enemy[1][1]] = "!"
-                self.col_taken[enemy[1][0]] = True
+            if not self.shot_matrix[enemy[1][0]+1][enemy[1][1]] == "!":
+                if self.field[enemy[1][0]+1][enemy[1][1]] == " " and treshold <= random.random() and not self.col_taken[enemy[1][1]]:
+                    self.shot_matrix[enemy[1][0]+1][enemy[1][1]] = "!"
+                    self.col_taken[enemy[1][1]] = True
+
 
 
 
@@ -139,16 +141,19 @@ class Board:
     def move_enemy_bullets(self):
         with self.lock_enemy_bullets_move:
             for i in range(len(self.shot_matrix)):
-                    for j in range(len(self.shot_matrix[i])):
-                        if self.shot_matrix[i][j] == "!":
-                            self.shot_matrix[i][j] = " "
-                            if i+1 <= 23:
-                                if not self.field[i+1][j] == " ":
+                for j in range(len(self.shot_matrix[i])):
+                    if self.shot_matrix[i][j] == "!":
+                        if i+1 <= 23:
+                            if not self.field[i+1][j] == " ":
+                                self.shot_matrix[i][j] = " "  # Clear previous position
+                                self.shot_matrix[i+1][j] = "!"  # Update position
+                                self.col_taken[j] = False
+                            else:
+                                self.shot_matrix[i][j] = " "  # Clear previous position
+                                self.shot_matrix[i+1][j] = "!"  # Update position
+                        else:
+                            self.shot_matrix[i][j] = " "  # Remove bullet when out of bounds
 
-                                    self.shot_matrix[i+1][j] = " "
-                                    self.col_taken[j] = False
-                                else:
-                                    self.shot_matrix[i+1][j] = "!"
 
     
 def controller(window, board):
@@ -235,8 +240,8 @@ def start(window):
     control_spawn_enemy_bullets = threading.Thread(target=spawn_enemy_shot, args=(board, ))
     control_spawn_enemy_bullets.start()
 
-    #control_enemy_bullets = threading.Thread(target=controller_enemy_bullets, args=(board, ))
-    #control_enemy_bullets.start()
+    control_enemy_bullets = threading.Thread(target=controller_enemy_bullets, args=(board, ))
+    control_enemy_bullets.start()
 
     curses.curs_set(0)
     while not board.game_over:
@@ -254,7 +259,7 @@ def start(window):
         thread.join()
     control_player_bullets.join()
     control_time.join()
-    #control_enemy_bullets.join()
+    control_enemy_bullets.join()
     control_spawn_enemy_bullets.join()
 
 if __name__ == "__main__":
