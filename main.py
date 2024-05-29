@@ -49,7 +49,7 @@ class Board:
         self.game_over = False
 
     def __str__(self):
-        score = f"Score: {self.score}"
+        score = f'Score: {"{:02d}".format(self.score)}'
         hp = f"HP x {self.lives}"
         area = "|"+"=" * (COLUMNS-2) + "==|" + "\n"
         for row in self.field:
@@ -59,7 +59,7 @@ class Board:
             area += "|\n"
         minutes = int(self.elapsed_time // 60)
         seconds = int(self.elapsed_time % 60)
-        area +="|" + hp + "=" + "{:02d}:{:02d}".format(minutes, seconds) + "=" * (COLUMNS-20) + score + "|"
+        area +="|" + hp + "=" * (COLUMNS-35) + "{:02d}:{:02d}".format(minutes, seconds) + "=" * (COLUMNS-35) + score + "|"
         return area
     
     def refresh(self):
@@ -146,6 +146,7 @@ class Board:
                                 if not self.field[i+1][j] == " ":
 
                                     self.shot_matrix[i+1][j] = " "
+                                    self.col_taken[j] = False
                                 else:
                                     self.shot_matrix[i+1][j] = "!"
 
@@ -224,14 +225,18 @@ def start(window):
         control_enemy = threading.Thread(target=controller_enemy,args=(board, i))
         control_enemies.append(control_enemy)
         control_enemy.start()
+
     control_player_bullets = threading.Thread(target=controller_player_bullets, args=(board, ))
     control_player_bullets.start()
+
     control_time = threading.Thread(target=timer, args=(board, ))
     control_time.start()
+
+    control_spawn_enemy_bullets = threading.Thread(target=spawn_enemy_shot, args=(board, ))
+    control_spawn_enemy_bullets.start()
+
     #control_enemy_bullets = threading.Thread(target=controller_enemy_bullets, args=(board, ))
     #control_enemy_bullets.start()
-    #control_spawn_enemy_bullets = threading.Thread(target=spawn_enemy_shot, args=(board, ))
-    #control_spawn_enemy_bullets.start()
 
     curses.curs_set(0)
     while not board.game_over:
@@ -250,7 +255,7 @@ def start(window):
     control_player_bullets.join()
     control_time.join()
     #control_enemy_bullets.join()
-    #control_spawn_enemy_bullets.join()
+    control_spawn_enemy_bullets.join()
 
 if __name__ == "__main__":
     curses.wrapper(start)
