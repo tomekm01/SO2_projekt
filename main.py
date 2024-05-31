@@ -66,6 +66,7 @@ class Board:
         self.field =[[" " for _ in range(COLUMNS)] for _ in range(ROWS)]
         self.shot_hitbox = [[" " for _ in range(COLUMNS)] for _ in range(ROWS)]
         for r,c,ch in self.player1:
+            self.shot_hitbox[r][c] = "p"
             self.field[r][c] = str(ch)
         for i in range(len(self.enemies)):
             for r,c,ch in self.enemies[i]:
@@ -111,6 +112,7 @@ class Board:
     def spawn_enemy_bullet(self):
         treshold = 0.9
         for enemy in self.enemies:
+            #change spawning mechanic
             if not self.shot_matrix[enemy[1][0]+1][enemy[1][1]] == "!":
                 if self.field[enemy[1][0]+1][enemy[1][1]] == " " and treshold <= random.random() and not self.col_taken[enemy[1][1]]:
                     self.shot_matrix[enemy[1][0]+1][enemy[1][1]] = "!"
@@ -123,6 +125,11 @@ class Board:
         self.enemies.pop(self.shot_hitbox[x][y])
         self.score+=1
     
+    def shot_player(self):
+        self.lives-=1
+        if self.lives == 0:
+            self.game_over = True
+    
     def move_player_bullets(self):
         with self.lock_player_bullets_move:
             for i in range(len(self.shot_matrix)):
@@ -130,12 +137,11 @@ class Board:
                     if self.shot_matrix[i][j] == "|":
                         self.shot_matrix[i][j] = " "
                         if i-1 >= 1:
-                            if not self.field[i-1][j] == " ":
+                            if not self.field[i-1][j] == " " and not self.field[i-1][j] == "!":
                                 self.shot_enemy(i-1,j)
                                 self.shot_matrix[i-1][j] = " "
                             else:
                                 self.shot_matrix[i-1][j] = "|"
-
                     
     
     def move_enemy_bullets(self):
@@ -143,17 +149,13 @@ class Board:
             for i in range(len(self.shot_matrix)):
                 for j in range(len(self.shot_matrix[i])):
                     if self.shot_matrix[i][j] == "!":
+                        self.shot_matrix[i][j] = " "
                         if i+1 <= 23:
-                            if not self.field[i+1][j] == " ":
-                                self.shot_matrix[i][j] = " "  # Clear previous position
-                                self.shot_matrix[i+1][j] = "!"  # Update position
-                                self.col_taken[j] = False
+                            if not self.field[i+1][j] == " " and self.shot_hitbox[i+1][j] == "p":
+                                self.shot_player()
+                                self.shot_matrix[i+1][j] = " "
                             else:
-                                self.shot_matrix[i][j] = " "  # Clear previous position
-                                self.shot_matrix[i+1][j] = "!"  # Update position
-                        else:
-                            self.shot_matrix[i][j] = " "  # Remove bullet when out of bounds
-
+                                self.shot_matrix[i+1][j] = "!"
 
     
 def controller(window, board):
