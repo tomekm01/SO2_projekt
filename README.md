@@ -22,7 +22,7 @@ pip3 install curses
 python3 main.py
 ```
 ## Gameplay
-![gameplay example](url)
+![gameplay example](https://github.com/tomekm01/SO2_projekt/blob/main/gameplay_screenshot.PNG)
 
 
 
