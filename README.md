@@ -41,13 +41,18 @@ Due to curses limitations you cannot press the same button twice in a row.
 This project utilizes multiple threads to handle various aspects of the game concurrently. Each thread is responsible for different functionalities, such as player control, enemy movement, bullet management, and timing.
 
 ### Threads
-- control_p1: Thread managing player input and movement.
-- control_enemies: List of threads, each managing the movement of individual enemy units.
-- control_time: Thread tracking elapsed game time.
-- control_spawn_enemy_bullets: Thread spawning bullets fired by enemy units.
-- control_player_bullets: Thread managing player bullet movement.
-- Main thread: Controls the game loop and display updates.
+- `control_p1` - Thread managing player input and movement.
+- `control_enemies` - List of threads, each managing the movement of individual enemy units.
+- `control_time` - Thread tracking elapsed game time.
+- `control_spawn_enemy_bullets` - Thread spawning bullets fired by enemy units.
+- `control_player_bullets` - Thread managing player bullet movement.
+- Main thread - Controls the game loop and display updates.
 
+### Critical Sections
+- Player Movement and Input - Controlled by the `controller()` function, which manages the direction of the player's movement based on user input.
+- Enemy Movement - Managed by the `controller_enemy()` function, ensuring that enemy units move in a coordinated manner without conflicts.
+- Player Bullet Movement - Handled by the `controller_player_bullets()` function, ensuring that player bullets move without interference from other actions.
+- Enemy Bullet Spawning - Managed by the `spawn_enemy_shot()` function, ensuring that enemy bullets are spawned safely without race conditions.
 
 
 

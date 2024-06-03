@@ -54,7 +54,7 @@ class Board:
         self.y_offset = 0
         self.char_l = ["/","(","^","<","]","/","<"]
         self.char_r = ["\\",")","^",">","[","\\",">"]
-        self.condition_move = threading.Condition()
+        self.lock_player_move = threading.Lock()
         self.lock_enemy_bullets_move = threading.Lock()
         self.lock_player_bullets_move = threading.Lock()
         self.lock_spawn_bullets = threading.Lock()
@@ -114,15 +114,16 @@ class Board:
         self.y_offset = y
         
     def move_p1(self):
-        diff = 0
-        if self.direction == 1 and self.player1[0][1] > 0:
-            diff = -1
-        elif self.direction == 2 and self.player1[4][1] < COLUMNS-2:
-            diff = 1
-        else:
+        with self.lock_player_move:
             diff = 0
-        for i in self.player1:
-            i[1] +=diff
+            if self.direction == 1 and self.player1[0][1] > 0:
+                diff = -1
+            elif self.direction == 2 and self.player1[4][1] < COLUMNS-2:
+                diff = 1
+            else:
+                diff = 0
+            for i in self.player1:
+                i[1] +=diff
 
     def move_enemy(self):
         for enemy in self.enemies:
