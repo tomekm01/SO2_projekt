@@ -110,14 +110,12 @@ class Board:
         self.shot_matrix[ROWS-3][x_pos] = "|"
 
     def spawn_enemy_bullet(self):
-        treshold = 0.9
+        treshold = 0.99
         for enemy in self.enemies:
             if not self.shot_matrix[enemy[1][0]+1][enemy[1][1]] == "!" and self.field[enemy[1][0]+1][enemy[1][1]] == " ":
                 if self.field[enemy[1][0]+1][enemy[1][1]] == " " and treshold <= random.random():
-                    #self.shot_matrix[enemy[1][0]+1][enemy[1][1]] = "!"
                     control_bullet = threading.Thread(target=self.move_bullet,args=(enemy[1][0]+1, enemy[1][1]))
                     control_bullet.start()
-                    #self.col_taken[enemy[1][1]] = True
 
     def move_bullet(self,i,j):
         while i+1 <= 24:
