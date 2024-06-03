@@ -14,8 +14,7 @@ This is a simple ASCII space invaders game implemented in Python using the curse
 1. Clone this repository to your local machine.
 2. Ensure you have Python 3.x installed.
 3. Install the curses library if not already installed:
-pip install windows-curses # For Windows
-
-or
-
-pip install curses # For Unix-based systems
+4. Run the game using the following command:
+'''bash
+python3 main.py
+'''
