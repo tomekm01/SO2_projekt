@@ -1,6 +1,6 @@
 # Spacja Najeźdźcy
 
-This is a simple ASCII space invaders game implemented in Python using the curses library. The game is played in the terminal.
+This is a simple ASCII space invaders game implemented in Python using the curses library to present capabiliteis of multithreading.
 
 ## How to Play
 
@@ -36,7 +36,22 @@ Due to curses limitations you cannot press the same button twice in a row.
 - Player and enemy bullet collision detection.
 - Score and remaining lives display.
 
+## Multi-Threading
+
+This project utilizes multiple threads to handle various aspects of the game concurrently. Each thread is responsible for different functionalities, such as player control, enemy movement, bullet management, and timing.
+
+### Threads
+- control_p1: Thread managing player input and movement.
+- control_enemies: List of threads, each managing the movement of individual enemy units.
+- control_time: Thread tracking elapsed game time.
+- control_spawn_enemy_bullets: Thread spawning bullets fired by enemy units.
+- control_player_bullets: Thread managing player bullet movement.
+- Main thread: Controls the game loop and display updates.
+
+
+
+
 ## Credits
 
 - This game is inspired by classic space invaders games.
-- Implemented by [Your Name].
+- Implemented by Paweł Cyganiuk and Tomasz Mondrzycki.
