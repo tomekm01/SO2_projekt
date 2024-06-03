@@ -14,7 +14,29 @@ This is a simple ASCII space invaders game implemented in Python using the curse
 1. Clone this repository to your local machine.
 2. Ensure you have Python 3.x installed.
 3. Install the curses library if not already installed:
+```bash
+pip3 install curses
+```
 4. Run the game using the following command:
-'''bash
+```bash
 python3 main.py
-'''
+```
+
+## Controls
+Due to curses limitations you cannot press the same button twice in a row.
+- Left Arrow: Move spaceship left
+- Right Arrow: Move spaceship right
+- Up Arrow: Shoot bullets
+- Down Arrow: Stop spaceship movement
+
+## Game Features
+
+- ASCII graphics for a retro gaming experience.
+- Dynamic enemy movement.
+- Player and enemy bullet collision detection.
+- Score and remaining lives display.
+
+## Credits
+
+- This game is inspired by classic space invaders games.
+- Implemented by [Your Name].
