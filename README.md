@@ -1,6 +1,6 @@
 # Spacja Najeźdźcy
 
-This is a simple ASCII space invaders game implemented in Python using the curses library to present capabiliteis of multithreading.
+The project is a space invaders-style game implemented in Python using the curses library for terminal-based graphics. It features multithreading to manage various game aspects simultaneously.
 
 ## How to Play
 
@@ -21,20 +21,17 @@ pip3 install curses
 ```bash
 python3 main.py
 ```
+## Gameplay
+![gameplay example](url)
+
+
 
 ## Controls
 Due to curses limitations you cannot press the same button twice in a row.
-- Left Arrow: Move spaceship left
-- Right Arrow: Move spaceship right
-- Up Arrow: Shoot bullets
-- Down Arrow: Stop spaceship movement
-
-## Game Features
-
-- ASCII graphics for a retro gaming experience.
-- Dynamic enemy movement.
-- Player and enemy bullet collision detection.
-- Score and remaining lives display.
+- Left Arrow - Move spaceship left
+- Right Arrow - Move spaceship right
+- Up Arrow - Shoot bullets
+- Down Arrow - Stop spaceship movement
 
 ## Multi-Threading
 

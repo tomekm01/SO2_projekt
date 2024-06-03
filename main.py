@@ -10,11 +10,13 @@ ROWS, COLUMNS = 25, 50
 class Board:
 
     def __init__(self):
+        # Initialize game parameters
         self.lives = 3
         self.score = 0
         self.elapsed_time = 0
         self.field = [[" " for _ in range(COLUMNS)] for _ in range(ROWS)]
         self.shot_hitbox = [[" " for _ in range(COLUMNS)] for _ in range(ROWS)]
+        # Barrier setup
         self.barrier = [[20, 5,"#",3],
                         [20, 6,"#",3],
                         [20, 7,"#",3],
@@ -35,7 +37,8 @@ class Board:
                         [20, 42,"#",3],
                         [20, 43,"#",3],
                         [20, 44,"#",3]]
-
+        
+        # Player setup
         self.player1 = [[ROWS-1,(int(COLUMNS/2)-2),"<"],
                         [ROWS-1,(int(COLUMNS/2)-1),"|"],
                         [ROWS-1,(int(COLUMNS/2)),"Y"],
@@ -54,10 +57,12 @@ class Board:
         self.y_offset = 0
         self.char_l = ["/","(","^","<","]","/","<"]
         self.char_r = ["\\",")","^",">","[","\\",">"]
+        # Initialize locks for thread synchronization
         self.lock_player_move = threading.Lock()
         self.lock_enemy_bullets_move = threading.Lock()
         self.lock_player_bullets_move = threading.Lock()
         self.lock_spawn_bullets = threading.Lock()
+        # Create enemies
         for i in range(6):
             self.enemy = [[i,1,self.char_l[i]],
                       [i,2,"@"],
@@ -87,18 +92,23 @@ class Board:
         return area
     
     def refresh(self):
+        # Update game field with current state
         self.field =[[" " for _ in range(COLUMNS)] for _ in range(ROWS)]
         self.shot_hitbox = [[" " for _ in range(COLUMNS)] for _ in range(ROWS)]
+        # Update player position
         for r,c,ch in self.player1:
             self.shot_hitbox[r][c] = "p"
             self.field[r][c] = str(ch)
+        # Update barrier positions
         for r,c,ch,dur in self.barrier:
             self.shot_hitbox[r][c] = "#"
             self.field[r][c] = str(ch)
+        # Update enemy positions
         for i in range(len(self.enemies)):
             for r,c,ch in self.enemies[i]:
                 self.shot_hitbox[r][c] = i
                 self.field[r][c] = str(ch)
+        # Update bullet positions
         for i in range(len(self.shot_matrix)):
             for j in range(len(self.shot_matrix[i])):
                 if not self.shot_matrix[i][j] == " " :
@@ -106,14 +116,17 @@ class Board:
         
 
     def controller(self,new_direction):
-        # 1  2
+        # Handle player direction control
+        # 1  2 
         self.direction = new_direction
 
     def controller_enemy(self,x,y):
+        # Handle enemy movement control
         self.x_offset = x
         self.y_offset = y
         
     def move_p1(self):
+        # Move player
         with self.lock_player_move:
             diff = 0
             if self.direction == 1 and self.player1[0][1] > 0:
@@ -126,6 +139,7 @@ class Board:
                 i[1] +=diff
 
     def move_enemy(self):
+        # Move enemies
         for enemy in self.enemies:
             i = 0
             for j in enemy:
@@ -134,20 +148,23 @@ class Board:
                 i+=1
 
     def shoot_p1(self):
+        # Spawn player bullets
         x_pos = self.player1[2][1]
         self.shot_matrix[ROWS-3][x_pos] = "|"
 
     def spawn_enemy_bullet(self):
+        # Spawn enemy bullets
         treshold = 0.98
         for enemy in self.enemies:
             with self.lock_spawn_bullets:
                 if not self.shot_matrix[enemy[1][0]+1][enemy[1][1]] == "!" and self.field[enemy[1][0]+1][enemy[1][1]] == " ":
                     if self.field[enemy[1][0]+1][enemy[1][1]] == " " and treshold <= random.random():
-                        control_bullet = threading.Thread(target=self.move_bullet,args=(enemy[1][0]+1, enemy[1][1]))
+                        control_bullet = threading.Thread(target=self.move_enemy_bullet,args=(enemy[1][0]+1, enemy[1][1]))
                         self.bullet_threads.append(control_bullet)
                         control_bullet.start()
 
-    def move_bullet(self,i,j):
+    def move_enemy_bullet(self,i,j):
+        # Manages enemy bullets
         while i+1 <= 24:
             with self.lock_enemy_bullets_move:
                 self.shot_matrix[i][j] = " "
@@ -167,6 +184,7 @@ class Board:
 
 
     def shot_enemy(self, x, y):
+        # Manages enemies being shot
         self.enemies.pop(self.shot_hitbox[x][y])
         self.score+=1
         if self.enemies == []:
@@ -176,6 +194,7 @@ class Board:
 
     
     def shot_barrier(self,x,y):
+        # Manages barriers being shot
         for i, (r, c, ch, dur) in enumerate(self.barrier):
             if r == x and c == y:
                 self.barrier[i][3] -=1
@@ -185,6 +204,7 @@ class Board:
 
     
     def shot_player(self):
+        # Manages player being shot
         self.lives-=1
         if self.lives == 0:
             self.pre_game_over = True
@@ -192,6 +212,7 @@ class Board:
             self.game_over = True
     
     def move_player_bullets(self):
+        # Move player bullets
         with self.lock_player_bullets_move:
             for i in range(len(self.shot_matrix)):
                 for j in range(len(self.shot_matrix[i])):
@@ -208,6 +229,7 @@ class Board:
 
     
 def controller(window, board):
+    # Player control thread
     prev_char = 0
     while not board.game_over:
         char = window.getch()
@@ -222,6 +244,7 @@ def controller(window, board):
         prev_char = char
 
 def controller_enemy(board, enemy):
+    # Enemy control thread
     x_off = 1
     par = 1
     y_off = 0
@@ -251,11 +274,13 @@ def controller_enemy(board, enemy):
         time.sleep(0.1)
 
 def controller_player_bullets(board):
+    # Player bullet control thread
     while not board.game_over:
         board.move_player_bullets()
         time.sleep(0.1)
 
 def controller_enemy_bullets(board):
+    # Enemy bullet control thread
     while not board.game_over:
         board.move_enemy_bullets()
         time.sleep(0.1)
@@ -263,18 +288,21 @@ def controller_enemy_bullets(board):
 
 
 def spawn_enemy_shot(board):
+    # Enemy bullet spawn thread
     time.sleep(0.2)
     while not board.game_over:
         board.spawn_enemy_bullet()
         time.sleep(0.1)
 
 def timer(board):
+    # Game timer thread
     while not board.game_over:
         board.elapsed_time+=1
         time.sleep(1.0)
 
     
 def start(window):
+    # Main game loop
     board = Board()
     control_enemies = []
     control_p1 = threading.Thread(target=controller, args=(window, board))
