@@ -16,6 +16,26 @@ class Board:
         self.col_taken = [ False for _ in range(COLUMNS)]
         self.field = [[" " for _ in range(COLUMNS)] for _ in range(ROWS)]
         self.shot_hitbox = [[" " for _ in range(COLUMNS)] for _ in range(ROWS)]
+        self.barrier = [[20, 5,"#",5],
+                        [20, 6,"#",5],
+                        [20, 7,"#",5],
+                        [20, 8,"#",5],
+                        [20, 9,"#",5],
+                        [20, 15,"#",5],
+                        [20, 16,"#",5],
+                        [20, 17,"#",5],
+                        [20, 18,"#",5],
+                        [20, 19,"#",5],
+                        [20, 30,"#",5],
+                        [20, 31,"#",5],
+                        [20, 32,"#",5],
+                        [20, 33,"#",5],
+                        [20, 34,"#",5],
+                        [20, 40,"#",5],
+                        [20, 41,"#",5],
+                        [20, 42,"#",5],
+                        [20, 43,"#",5],
+                        [20, 44,"#",5]]
 
         self.player1 = [[ROWS-1,(int(COLUMNS/2)-2),"<"],
                         [ROWS-1,(int(COLUMNS/2)-1),"|"],
@@ -29,6 +49,7 @@ class Board:
         self.direction = 0
         self.enemies = []
         self.x_offset = 0
+        self.pre_game_over = False
         self.shot_matrix = [[" " for _ in range(COLUMNS)] for _ in range(ROWS)]
         self.y_offset = 0
         self.char_l = ["/","(","^","<","]","/","<"]
@@ -59,7 +80,10 @@ class Board:
             area += "|\n"
         minutes = int(self.elapsed_time // 60)
         seconds = int(self.elapsed_time % 60)
-        area +="|" + hp + "=" * (COLUMNS-35) + "{:02d}:{:02d}".format(minutes, seconds) + "=" * (COLUMNS-35) + score + "|"
+        if not self.pre_game_over:
+            area +="|" + hp + "=" * (COLUMNS-35) + "{:02d}:{:02d}".format(minutes, seconds) + "=" * (COLUMNS-35) + score + "|"
+        else:
+            area +="|" + hp + "=" * (3) + "GAME OVER" + "=" * (3) + "{:02d}:{:02d}".format(minutes, seconds) + "=" * (3) + "GAME OVER" + "=" * (3) + score + "|"
         return area
     
     def refresh(self):
@@ -67,6 +91,9 @@ class Board:
         self.shot_hitbox = [[" " for _ in range(COLUMNS)] for _ in range(ROWS)]
         for r,c,ch in self.player1:
             self.shot_hitbox[r][c] = "p"
+            self.field[r][c] = str(ch)
+        for r,c,ch,dur in self.barrier:
+            self.shot_hitbox[r][c] = "#"
             self.field[r][c] = str(ch)
         for i in range(len(self.enemies)):
             for r,c,ch in self.enemies[i]:
@@ -110,7 +137,7 @@ class Board:
         self.shot_matrix[ROWS-3][x_pos] = "|"
 
     def spawn_enemy_bullet(self):
-        treshold = 0.99
+        treshold = 0.98
         for enemy in self.enemies:
             if not self.shot_matrix[enemy[1][0]+1][enemy[1][1]] == "!" and self.field[enemy[1][0]+1][enemy[1][1]] == " ":
                 if self.field[enemy[1][0]+1][enemy[1][1]] == " " and treshold <= random.random():
@@ -123,6 +150,11 @@ class Board:
             if not self.field[i+1][j] == " " and self.shot_hitbox[i+1][j] == "p":
                 self.shot_player()
                 self.shot_matrix[i+1][j] = " "
+                break
+            elif not self.field[i+1][j] == " " and self.shot_hitbox[i+1][j] == "#":
+                self.shot_barrier(i+1,j)
+                self.shot_matrix[i+1][j] = " "
+                break
             else:
                 self.shot_matrix[i+1][j] = "!"
             i+=1
@@ -133,10 +165,26 @@ class Board:
     def shot_enemy(self, x, y):
         self.enemies.pop(self.shot_hitbox[x][y])
         self.score+=1
+        if self.enemies == []:
+            self.pre_game_over = True
+            time.sleep(0.2)
+            self.game_over = True
+
+    
+    def shot_barrier(self,x,y):
+        for i, (r, c, ch, dur) in enumerate(self.barrier):
+            if r == x and c == y:
+                self.barrier[i][3] -=1
+                if self.barrier[i][3] == 0:
+                    del self.barrier[i]
+
+
     
     def shot_player(self):
         self.lives-=1
         if self.lives == 0:
+            self.pre_game_over = True
+            time.sleep(0.2)
             self.game_over = True
     
     def move_player_bullets(self):
@@ -146,8 +194,10 @@ class Board:
                     if self.shot_matrix[i][j] == "|":
                         self.shot_matrix[i][j] = " "
                         if i-1 >= 1:
-                            if not self.field[i-1][j] == " " and not self.field[i-1][j] == "!":
+                            if not self.field[i-1][j] == " " and not self.field[i-1][j] == "!" and not self.field[i-1][j] == "#":
                                 self.shot_enemy(i-1,j)
+                                self.shot_matrix[i-1][j] = " "
+                            elif not self.field[i-1][j] == " " and self.field[i-1][j] == "#":
                                 self.shot_matrix[i-1][j] = " "
                             else:
                                 self.shot_matrix[i-1][j] = "|"
