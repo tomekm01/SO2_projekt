@@ -7,7 +7,7 @@ The project is a space invaders-style game implemented in Python using the curse
 1. Use the left and right arrow keys to move your spaceship.
 2. Press the up arrow key to shoot bullets.
 3. Avoid enemy bullets and eliminate all enemies to win.
-4. You have three lives, and the game ends when you lose all lives.
+4. You have three lives, and the game ends when you lose them.
 
 ## Installation
 
