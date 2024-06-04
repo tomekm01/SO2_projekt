@@ -27,7 +27,6 @@ python3 main.py
 
 
 ## Controls
-Due to curses limitations you cannot press the same button twice in a row.
 - Left Arrow - Move spaceship left
 - Right Arrow - Move spaceship right
 - Up Arrow - Shoot bullets

@@ -230,18 +230,17 @@ class Board:
     
 def controller(window, board):
     # Player control thread
-    prev_char = 0
     while not board.game_over:
         char = window.getch()
+        curses.flushinp()
         if char == curses.KEY_LEFT:
             board.controller(1)
         elif char == curses.KEY_RIGHT:
             board.controller(2)
-        elif char == curses.KEY_UP and prev_char != curses.KEY_UP:
+        elif char == curses.KEY_UP:
             board.shoot_p1()
         else:
             board.controller(0)
-        prev_char = char
 
 def controller_enemy(board, enemy):
     # Enemy control thread
